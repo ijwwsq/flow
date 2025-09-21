@@ -1,0 +1,26 @@
+{
+  "setup": {
+    "status": "SUCCESS",
+    "attempts": 1,
+    "start_time": 1758471009.5583093,
+    "end_time": null
+  },
+  "independent_task": {
+    "status": "SUCCESS",
+    "attempts": 1,
+    "start_time": 1758471010.5615544,
+    "end_time": null
+  },
+  "fetch_data": {
+    "status": "SUCCESS",
+    "attempts": 1,
+    "start_time": 1758471010.5618315,
+    "end_time": null
+  },
+  "broken_task": {
+    "status": "FAILED",
+    "attempts": 1,
+    "start_time": 1758471012.5673766,
+    "end_time": 1758471013.5722153
+  }
+}

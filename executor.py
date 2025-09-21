@@ -4,16 +4,16 @@ import time
 from enum import Enum
 from typing import Dict, List
 from pathlib import Path
-from parser import Task
 import json
+from parser import Task
 
 
 class TaskStatus(Enum):
-    PENDING = "PENDING"
-    RUNNING = "RUNNING"  
-    SUCCESS = "SUCCESS"
-    FAILED = "FAILED"
-    RETRYING = "RETRYING"
+    PENDING = "pending"
+    RUNNING = "running"  
+    SUCCESS = "done"
+    FAILED = "failed"
+    RETRYING = "retrying"
 
 
 class TaskResult:
@@ -33,10 +33,9 @@ class TaskExecutor:
         self.max_workers = max_workers
         self.retries = retries
         self.results: Dict[str, TaskResult] = {}
-        self.state_file = Path("taskflow_state.json")
+        self.state_file = Path("flow_state.json")
     
     def save_state(self):
-        """Сохраняет состояние выполнения для возможности resume"""
         state = {}
         for task_id, result in self.results.items():
             state[task_id] = {
@@ -50,7 +49,6 @@ class TaskExecutor:
             json.dump(state, f, indent=2)
     
     def load_state(self) -> bool:
-        """Загружает сохраненное состояние"""
         if not self.state_file.exists():
             return False
         
@@ -66,23 +64,20 @@ class TaskExecutor:
                 result.end_time = task_state['end_time']
                 self.results[task_id] = result
             
-            self.logger.info(f"Loaded previous state: {len(state)} tasks")
+            self.logger.info(f"resumed {len(state)} tasks")
             return True
             
         except Exception as e:
-            self.logger.warning(f"Failed to load state: {e}")
+            self.logger.warning(f"resume failed: {e}")
             return False
     
     def execute_task(self, task: Task) -> TaskResult:
-        """Выполняет одну задачу"""
         if task.id not in self.results:
             self.results[task.id] = TaskResult(task.id)
         
         result = self.results[task.id]
         
-        # Если задача уже выполнена успешно, пропускаем
         if result.status == TaskStatus.SUCCESS:
-            self.logger.info(f"Task {task.id}: Already completed ✓")
             return result
         
         max_attempts = self.retries + 1
@@ -92,13 +87,9 @@ class TaskExecutor:
             result.status = TaskStatus.RETRYING if result.attempts > 1 else TaskStatus.RUNNING
             result.start_time = time.time()
             
-            status_msg = f"Task {task.id}: {result.status.value}"
-            if result.attempts > 1:
-                status_msg += f" (attempt {result.attempts}/{max_attempts})"
-            self.logger.info(status_msg)
+            self.logger.info(f"{task.id}: {result.status.value}")
             
             try:
-                # Выполняем команду с выводом в реальном времени
                 process = subprocess.Popen(
                     task.run,
                     shell=True,
@@ -110,11 +101,10 @@ class TaskExecutor:
                 )
                 
                 output_lines = []
-                # Читаем вывод построчно и показываем в реальном времени
                 for line in process.stdout:
                     line = line.rstrip()
                     if line:
-                        print(f"  [{task.id}] {line}")  # Выводим с префиксом задачи
+                        print(f"  {task.id} | {line}")
                         output_lines.append(line)
                 
                 process.wait(timeout=3600)
@@ -123,48 +113,32 @@ class TaskExecutor:
                 
                 if process.returncode == 0:
                     result.status = TaskStatus.SUCCESS
-                    self.logger.info(f"Task {task.id}: SUCCESS ✓")
+                    self.logger.info(f"{task.id}: done")
                     self.save_state()
                     return result
                 else:
                     raise subprocess.CalledProcessError(process.returncode, task.run, 
-                                                    result.output, "")
-                
-                result.end_time = time.time()
-                result.output = process.stdout
-                result.error = process.stderr
-                
-                if process.returncode == 0:
-                    result.status = TaskStatus.SUCCESS
-                    self.logger.info(f"Task {task.id}: SUCCESS ✓")
-                    self.save_state()
-                    return result
-                else:
-                    raise subprocess.CalledProcessError(process.returncode, task.run, 
-                                                      process.stdout, process.stderr)
+                                                      result.output, "")
                     
             except subprocess.TimeoutExpired:
-                result.error = "Task timed out after 1 hour"
-                self.logger.error(f"Task {task.id}: TIMEOUT")
+                process.kill()
+                result.error = "timeout"
+                self.logger.error(f"{task.id}: timeout")
                 
             except subprocess.CalledProcessError as e:
-                result.error = f"Exit code {e.returncode}: {e.stderr}"
-                self.logger.error(f"Task {task.id}: FAILED - {result.error}")
+                result.error = f"exit {e.returncode}"
+                self.logger.error(f"{task.id}: failed")
                 
             except Exception as e:
                 result.error = str(e)
-                self.logger.error(f"Task {task.id}: ERROR - {result.error}")
+                self.logger.error(f"{task.id}: error")
         
-        # Все попытки исчерпаны
         result.status = TaskStatus.FAILED
         result.end_time = time.time()
-        self.logger.error(f"Task {task.id}: FAILED after {result.attempts} attempts ✗")
         self.save_state()
         return result
     
     def execute_level(self, tasks: List[Task]) -> List[TaskResult]:
-        """Выполняет задачи одного уровня параллельно"""
-        # Фильтруем только те задачи, которые нужно выполнить
         tasks_to_run = []
         for task in tasks:
             if task.id not in self.results or self.results[task.id].status != TaskStatus.SUCCESS:
@@ -181,7 +155,6 @@ class TaskExecutor:
                 result = future.result()
                 results.append(result)
         
-        # Добавляем результаты уже выполненных задач
         for task in tasks:
             if task not in tasks_to_run:
                 results.append(self.results[task.id])
@@ -189,7 +162,6 @@ class TaskExecutor:
         return results
     
     def get_status_summary(self) -> Dict:
-        """Возвращает сводку по статусам задач"""
         summary = {status.value: 0 for status in TaskStatus}
         
         for result in self.results.values():

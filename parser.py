@@ -20,29 +20,28 @@ class PipelineParser:
         self.logger = logger
     
     def parse(self, pipeline_file: str) -> List[Task]:
-        """Парсит YAML файл с пайплайном и возвращает список задач"""
         pipeline_path = Path(pipeline_file)
         
         if not pipeline_path.exists():
-            raise FileNotFoundError(f"Pipeline file not found: {pipeline_file}")
+            raise FileNotFoundError(f"file not found: {pipeline_file}")
         
         try:
             with open(pipeline_path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f)
             
             if 'tasks' not in data:
-                raise ValueError("Pipeline must contain 'tasks' section")
+                raise ValueError("no tasks found")
             
             tasks = []
             task_ids = set()
             
             for task_data in data['tasks']:
                 if 'id' not in task_data or 'run' not in task_data:
-                    raise ValueError("Each task must have 'id' and 'run' fields")
+                    raise ValueError("task missing id or run")
                 
                 task_id = task_data['id']
                 if task_id in task_ids:
-                    raise ValueError(f"Duplicate task ID: {task_id}")
+                    raise ValueError(f"duplicate task: {task_id}")
                 
                 task_ids.add(task_id)
                 
@@ -53,14 +52,13 @@ class PipelineParser:
                 )
                 tasks.append(task)
             
-            # Проверяем, что все зависимости существуют
             for task in tasks:
                 for dep in task.depends_on:
                     if dep not in task_ids:
-                        raise ValueError(f"Task '{task.id}' depends on non-existent task '{dep}'")
+                        raise ValueError(f"task {task.id} depends on missing {dep}")
             
-            self.logger.info(f"Parsed {len(tasks)} tasks from {pipeline_file}")
+            self.logger.info(f"loaded {len(tasks)} tasks")
             return tasks
             
         except yaml.YAMLError as e:
-            raise ValueError(f"Invalid YAML format: {e}")
+            raise ValueError(f"bad yaml: {e}")

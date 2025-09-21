@@ -1,0 +1,32 @@
+2025-09-21 21:15:53,694 flow starting
+2025-09-21 21:15:53,694 running pipeline.yaml
+2025-09-21 21:15:53,696 loaded 6 tasks
+2025-09-21 21:15:53,698 setup: running
+2025-09-21 21:15:54,702 setup: done
+2025-09-21 21:15:54,704 independent_task: running
+2025-09-21 21:15:54,705 fetch_data: running
+2025-09-21 21:15:55,710 independent_task: done
+2025-09-21 21:15:56,711 fetch_data: done
+2025-09-21 21:15:56,713 broken_task: running
+2025-09-21 21:15:57,717 broken_task: failed
+2025-09-21 21:15:57,720 all tasks failed
+2025-09-21 21:15:57,720 failed
+2025-09-21 21:17:53,362 flow starting
+2025-09-21 21:17:53,362 running pipeline.yaml
+2025-09-21 21:17:53,363 loaded 6 tasks
+2025-09-21 21:17:53,365 setup: running
+2025-09-21 21:17:54,369 setup: done
+2025-09-21 21:17:54,371 fetch_data: running
+2025-09-21 21:17:54,372 independent_task: running
+2025-09-21 21:17:55,377 independent_task: done
+2025-09-21 21:17:56,377 fetch_data: done
+2025-09-21 21:17:56,379 broken_task: running
+2025-09-21 21:17:57,385 broken_task: failed
+2025-09-21 21:17:57,386 process_data: blocked by broken_task
+2025-09-21 21:17:57,386 final_task: blocked by process_data
+2025-09-21 21:17:57,387 failed
+2025-09-21 21:18:03,508 resumed 4 tasks
+2025-09-21 21:18:03,508 setup: done
+2025-09-21 21:18:03,508 fetch_data: done
+2025-09-21 21:18:03,508 independent_task: done
+2025-09-21 21:18:03,508 broken_task: failed
