@@ -1,4 +1,4 @@
-# taskflow
+# flow
 
 simple task orchestrator for running commands with dependencies.
 
@@ -31,7 +31,7 @@ tasks:
 
 run it:
 ```bash
-python cli.py run pipeline.yaml
+flow run pipeline.yaml
 ```
 
 watch it run in parallel, retry on failures, and actually work.
@@ -39,12 +39,12 @@ watch it run in parallel, retry on failures, and actually work.
 ## options
 
 ```bash
-python cli.py run pipeline.yaml --max-workers 2 --retries 1 --resume
+flow run pipeline.yaml --max-workers 2 --retries 1 --resume
 ```
 
 check status:
 ```bash
-python cli.py status
+flow status
 ```
 
 ## features
@@ -64,7 +64,7 @@ pip install -r requirements.txt
 install globally:
 ```bash
 pip install -e .
-taskflow run pipeline.yaml
+flow run pipeline.yaml
 ```
 
 no kubernetes required.

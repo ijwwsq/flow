@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="taskflow",
+    name="flow",
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
@@ -10,10 +10,10 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "taskflow=taskflow.cli:cli",
+            "flow=flow.cli:cli",
         ],
     },
-    author="TaskFlow Team",
-    description="Мини-оркестратор задач — упрощённый аналог Airflow",
+    author="Flow Team",
+    description="simple task orchestrator for running commands with dependencies",
     python_requires=">=3.10",
 )
